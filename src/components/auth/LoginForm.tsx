@@ -7,18 +7,25 @@ import { useAuth } from '../../contexts/AuthContext';
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [company, setCompany] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const { login, register, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-      await login(email, password);
+      if (isRegistering) {
+        await register(email, password, name, company);
+      } else {
+        await login(email, password);
+      }
     } catch (err) {
-      setError('Invalid email or password');
+      setError(err instanceof Error ? err.message : 'Authentication failed');
     }
   };
 
@@ -31,10 +38,34 @@ export const LoginForm: React.FC = () => {
               <div className="text-white font-bold text-xl">AI</div>
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Finance Interviewer</h2>
-            <p className="text-gray-600 mt-2">Sign in to your account</p>
+            <p className="text-gray-600 mt-2">
+              {isRegistering ? 'Create your account' : 'Sign in to your account'}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {isRegistering && (
+              <>
+                <Input
+                  label="Full Name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  required
+                />
+                
+                <Input
+                  label="Company"
+                  type="text"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="Enter your company name"
+                  required
+                />
+              </>
+            )}
+            
             <Input
               label="Email address"
               type="email"
@@ -76,13 +107,23 @@ export const LoginForm: React.FC = () => {
               loading={isLoading}
               size="lg"
             >
-              Sign in
+              {isRegistering ? 'Create Account' : 'Sign in'}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
-              Demo credentials: any email/password combination
+            <button
+              type="button"
+              onClick={() => setIsRegistering(!isRegistering)}
+              className="text-sm text-blue-600 hover:text-blue-500"
+            >
+              {isRegistering 
+                ? 'Already have an account? Sign in' 
+                : "Don't have an account? Register"
+              }
+            </button>
+            <p className="text-sm text-gray-500 mt-2">
+              Testing Supabase connection
             </p>
           </div>
         </div>
