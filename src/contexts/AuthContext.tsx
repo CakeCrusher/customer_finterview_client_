@@ -90,7 +90,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         options: {
           redirectTo: `${window.location.origin}/`,
           queryParams: {
-            access_type: 'offline',
+            access_type: 'online',
             prompt: 'consent',
           },
         },
