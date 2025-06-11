@@ -16,7 +16,7 @@ interface AppState {
 }
 
 const AppContent: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [appState, setAppState] = useState<AppState>({
     view: 'dashboard',
     editingInterview: null,
@@ -81,6 +81,14 @@ const AppContent: React.FC = () => {
       viewingResults: null
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center">
+        <div className="text-xl font-semibold text-gray-700">Loading...</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <LoginForm />;

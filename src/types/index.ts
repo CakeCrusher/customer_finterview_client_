@@ -53,8 +53,6 @@ export interface Interview {
 }
 
 export interface User {
-  id: string;
   email: string;
-  name: string;
   company: string;
 }
