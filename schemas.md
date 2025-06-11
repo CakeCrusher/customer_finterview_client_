@@ -181,7 +181,7 @@ CREATE TABLE supporting_files (
 
 /* ---------- CRITERIA (general OR task-specific) ---------- */
 CREATE TABLE criteria (
-    id          uuid PRIMARY KEY,                       -- supplied by client; keep stable
+    id           uuid PRIMARY KEY,                       -- supplied by client; keep stable
     interview_id uuid REFERENCES interviews(id) ON DELETE CASCADE,
     task_id      uuid REFERENCES tasks(id)      ON DELETE CASCADE,
     name         text      NOT NULL,

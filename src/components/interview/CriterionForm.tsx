@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { Trash2, Plus } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
@@ -25,7 +26,7 @@ export const CriterionForm: React.FC<CriterionFormProps> = ({
 
   const addCriterion = () => {
     const newCriterion: Criterion = {
-      id: `criterion-${Date.now()}`,
+      id: uuidv4(),
       name: '',
       description: '',
       type: 'rating',

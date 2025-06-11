@@ -31,7 +31,7 @@ const AppContent: React.FC = () => {
       setIsFetching(true);
       const { data, error } = await supabase
         .from('interviews')
-        .select('*, tasks(*)')
+        .select('*, tasks(*, criteria(*)), generalCriteria:criteria!interview_id(*)')
         .eq('owner_email', user.email);
 
       if (error) {
@@ -42,9 +42,9 @@ const AppContent: React.FC = () => {
           tasks: i.tasks.map((t: any) => ({
             ...t,
             supportingFiles: [],
-            criteria: [],
+            criteria: t.criteria || [],
           })),
-          generalCriteria: i.generalCriteria ?? [],
+          generalCriteria: i.generalCriteria || [],
         }));
         setInterviews(completeInterviews as Interview[]);
       }
@@ -168,18 +168,74 @@ const AppContent: React.FC = () => {
             (localTask.id.startsWith('new-task-') && dbTask.task_order === localTask.task_order)
           );
           if (matchingDbTask) {
-            return { ...localTask, ...matchingDbTask };
+            return { ...localTask, id: matchingDbTask.id };
           }
           return localTask;
         }).filter(t => !taskIdsToDelete.includes(t.id));
       }
-    } else {
-        savedTasks = [];
     }
+
+    const originalGeneralCriteria = originalInterview?.generalCriteria || [];
+    const originalTaskCriteria = originalInterview?.tasks.flatMap(t => t.criteria) || [];
+    const allOriginalCriteria = [...originalGeneralCriteria, ...originalTaskCriteria];
+
+    const updatedTaskCriteria = tasks.flatMap(t => t.criteria);
+    const allUpdatedCriteria = [...generalCriteria, ...updatedTaskCriteria];
+
+    const criteriaIdsToDelete = allOriginalCriteria
+      .map(c => c.id)
+      .filter(id => !allUpdatedCriteria.some(uc => uc.id === id));
+
+    if (criteriaIdsToDelete.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('criteria')
+        .delete()
+        .in('id', criteriaIdsToDelete);
+      if (deleteError) console.error('Error deleting criteria:', deleteError);
+    }
+    
+    const generalCriteriaToUpsert = generalCriteria.map(c => ({
+      ...c,
+      interview_id: updatedInterview.id,
+    }));
+
+    const taskCriteriaToUpsert = savedTasks.flatMap(task => 
+      (task.criteria || []).map(c => ({
+        ...c,
+        task_id: task.id
+      }))
+    );
+
+    const allCriteriaToUpsert = [...generalCriteriaToUpsert, ...taskCriteriaToUpsert].map(c => {
+      const crit = c as any;
+      const dto: { [key: string]: any } = {
+        id: crit.id,
+        name: crit.name,
+        description: crit.description,
+        type: crit.type,
+        scope: crit.scope,
+      };
+      if (crit.interview_id) {
+        dto.interview_id = crit.interview_id;
+      }
+      if (crit.task_id) {
+        dto.task_id = crit.task_id;
+      }
+      return dto;
+    });
+
+    if (allCriteriaToUpsert.length > 0) {
+      const { error: upsertError } = await supabase
+        .from('criteria')
+        .upsert(allCriteriaToUpsert)
+        .select();
+      if (upsertError) console.error('Error upserting criteria:', upsertError);
+    }
+    
 
     const newInterview: Interview = {
       ...(savedInterview as Interview),
-      tasks: savedTasks,
+      tasks: savedTasks.map(t => ({...t, supportingFiles: []})),
       generalCriteria,
       stats,
     };
