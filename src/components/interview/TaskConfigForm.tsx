@@ -16,16 +16,6 @@ export const TaskConfigForm: React.FC<TaskConfigFormProps> = ({ task, onChange }
     onChange({ ...task, [field]: value });
   };
 
-  const updateRequirements = (field: keyof Task['requirements'], value: boolean) => {
-    onChange({
-      ...task,
-      requirements: {
-        ...task.requirements,
-        [field]: value
-      }
-    });
-  };
-
   const aiBehaviorOptions = [
     { value: 'passive', label: 'Passive - Mostly listens' },
     { value: 'neutral', label: 'Neutral - Balanced interaction' },
@@ -35,25 +25,25 @@ export const TaskConfigForm: React.FC<TaskConfigFormProps> = ({ task, onChange }
 
   const requirementsList = [
     {
-      key: 'audio' as const,
+      key: 'req_audio' as const,
       label: 'Audio',
       description: 'Candidate can speak with the AI',
       icon: Mic
     },
     {
-      key: 'screenShare' as const,
+      key: 'req_screen_share' as const,
       label: 'Screen Share',
       description: 'Candidate must share their screen',
       icon: Monitor
     },
     {
-      key: 'webcam' as const,
+      key: 'req_webcam' as const,
       label: 'Webcam',
       description: 'Candidate camera must be on',
       icon: Camera
     },
     {
-      key: 'fileUpload' as const,
+      key: 'req_file_upload' as const,
       label: 'File Upload',
       description: 'Candidate can upload files',
       icon: Upload
@@ -94,8 +84,8 @@ export const TaskConfigForm: React.FC<TaskConfigFormProps> = ({ task, onChange }
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select
             label="AI Behavior"
-            value={task.aiBehavior}
-            onChange={(e) => updateTask('aiBehavior', e.target.value as AIBehavior)}
+            value={task.ai_behavior}
+            onChange={(e) => updateTask('ai_behavior', e.target.value as AIBehavior)}
             options={aiBehaviorOptions}
             helpText="How interactive should the AI interviewer be?"
           />
@@ -103,8 +93,8 @@ export const TaskConfigForm: React.FC<TaskConfigFormProps> = ({ task, onChange }
           <Input
             label="Duration (minutes)"
             type="number"
-            value={task.durationMinutes || ''}
-            onChange={(e) => updateTask('durationMinutes', e.target.value ? parseInt(e.target.value) : undefined)}
+            value={task.duration_minutes || ''}
+            onChange={(e) => updateTask('duration_minutes', e.target.value ? parseInt(e.target.value) : undefined)}
             placeholder="e.g., 10"
             helpText="Optional time limit for this task"
           />
@@ -121,8 +111,8 @@ export const TaskConfigForm: React.FC<TaskConfigFormProps> = ({ task, onChange }
                 <input
                   type="checkbox"
                   id={`requirement-${key}`}
-                  checked={task.requirements[key]}
-                  onChange={(e) => updateRequirements(key, e.target.checked)}
+                  checked={task[key]}
+                  onChange={(e) => updateTask(key, e.target.checked)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
               </div>

@@ -4,7 +4,7 @@ import { LoginForm } from './components/auth/LoginForm';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { InterviewEditor } from './components/interview/InterviewEditor';
 import { ResultsView } from './components/results/ResultsView';
-import { Interview } from './types';
+import { Interview, Task } from './types';
 import { supabase } from './lib/supabase';
 
 type AppView = 'dashboard' | 'editor' | 'results';
@@ -31,13 +31,21 @@ const AppContent: React.FC = () => {
       setIsFetching(true);
       const { data, error } = await supabase
         .from('interviews')
-        .select('*')
+        .select('*, tasks(*)')
         .eq('owner_email', user.email);
 
       if (error) {
         console.error('Error fetching interviews:', error);
       } else {
-        const completeInterviews = data.map(i => ({...i, tasks: i.tasks ?? [], generalCriteria: i.generalCriteria ?? []}))
+        const completeInterviews = data.map(i => ({
+          ...i,
+          tasks: i.tasks.map((t: any) => ({
+            ...t,
+            supportingFiles: [],
+            criteria: [],
+          })),
+          generalCriteria: i.generalCriteria ?? [],
+        }));
         setInterviews(completeInterviews as Interview[]);
       }
       setIsFetching(false);
@@ -102,7 +110,7 @@ const AppContent: React.FC = () => {
   const handleSaveInterview = async (updatedInterview: Interview) => {
     const { tasks, generalCriteria, stats, ...interviewData } = updatedInterview;
 
-    const { data, error } = await supabase
+    const { data: savedInterview, error: interviewSaveError } = await supabase
       .from('interviews')
       .update({
         ...interviewData,
@@ -112,19 +120,76 @@ const AppContent: React.FC = () => {
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating interview:', error);
+    if (interviewSaveError) {
+      console.error('Error updating interview:', interviewSaveError);
       return;
     }
 
-    const newInterview = { ...data, tasks, generalCriteria, stats };
+    const originalInterview = interviews.find(i => i.id === updatedInterview.id);
+    const originalTasks = originalInterview?.tasks || [];
 
-    setInterviews(prev => 
-      prev.map(interview => 
+    const taskIdsToDelete = originalTasks
+      .map(t => t.id)
+      .filter(id => !tasks.some(ut => ut.id === id))
+      .filter(id => !id.startsWith('new-task-'));
+
+    if (taskIdsToDelete.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('tasks')
+        .delete()
+        .in('id', taskIdsToDelete);
+
+      if (deleteError) console.error('Error deleting tasks:', deleteError);
+    }
+
+    const tasksToUpsert = tasks.map(task => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { supportingFiles, criteria, ...taskDto } = task;
+      if (task.id.startsWith('new-task-')) {
+        delete (taskDto as Partial<Task>).id;
+      }
+      return taskDto;
+    });
+
+    let savedTasks: Task[] = originalTasks.filter(t => !taskIdsToDelete.includes(t.id));
+
+    if (tasksToUpsert.length > 0) {
+      const { data: upsertedTasks, error: upsertError } = await supabase
+        .from('tasks')
+        .upsert(tasksToUpsert)
+        .select();
+      
+      if (upsertError) {
+        console.error('Error upserting tasks:', upsertError);
+      } else if (upsertedTasks) {
+        savedTasks = tasks.map(localTask => {
+          const matchingDbTask = upsertedTasks.find(dbTask => 
+            dbTask.id === localTask.id || 
+            (localTask.id.startsWith('new-task-') && dbTask.task_order === localTask.task_order)
+          );
+          if (matchingDbTask) {
+            return { ...localTask, ...matchingDbTask };
+          }
+          return localTask;
+        }).filter(t => !taskIdsToDelete.includes(t.id));
+      }
+    } else {
+        savedTasks = [];
+    }
+
+    const newInterview: Interview = {
+      ...(savedInterview as Interview),
+      tasks: savedTasks,
+      generalCriteria,
+      stats,
+    };
+
+    setInterviews(prev =>
+      prev.map(interview =>
         interview.id === newInterview.id ? newInterview : interview
       )
     );
-    
+
     setAppState(prev => ({
       ...prev,
       editingInterview: newInterview,

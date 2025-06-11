@@ -39,16 +39,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     return variants[behavior as keyof typeof variants] || 'default';
   };
 
-  const activeRequirements = Object.entries(task.requirements)
-    .filter(([_, value]) => value)
-    .map(([key]) => key);
+  const requirementsMap: { key: keyof Task, icon: React.ElementType, title: string }[] = [
+    { key: 'req_audio', icon: Mic, title: 'Audio' },
+    { key: 'req_screen_share', icon: Monitor, title: 'Screen Share' },
+    { key: 'req_webcam', icon: Camera, title: 'Webcam' },
+    { key: 'req_file_upload', icon: Upload, title: 'File Upload' },
+  ];
 
-  const requirementIcons = {
-    audio: Mic,
-    screenShare: Monitor,
-    webcam: Camera,
-    fileUpload: Upload
-  };
+  const activeRequirements = requirementsMap.filter(r => task[r.key]);
 
   return (
     <Card
@@ -93,30 +91,27 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
           <div className="flex items-center space-x-2 mb-3">
             <Badge 
-              variant={getAIBehaviorVariant(task.aiBehavior) as any}
+              variant={getAIBehaviorVariant(task.ai_behavior) as any}
               size="sm"
             >
-              {getAIBehaviorLabel(task.aiBehavior)}
+              {getAIBehaviorLabel(task.ai_behavior)}
             </Badge>
             
-            {task.durationMinutes && (
+            {task.duration_minutes && (
               <div className="flex items-center text-xs text-gray-500">
                 <Clock size={12} className="mr-1" />
-                {task.durationMinutes}m
+                {task.duration_minutes}m
               </div>
             )}
           </div>
 
           {activeRequirements.length > 0 && (
             <div className="flex items-center space-x-2">
-              {activeRequirements.map((req) => {
-                const Icon = requirementIcons[req as keyof typeof requirementIcons];
-                return (
-                  <div key={req} className="text-gray-400" title={req}>
+              {activeRequirements.map(({ key, icon: Icon, title }) => (
+                <div key={key} className="text-gray-400" title={title}>
                     <Icon size={14} />
                   </div>
-                );
-              })}
+              ))}
             </div>
           )}
 

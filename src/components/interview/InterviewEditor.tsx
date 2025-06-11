@@ -44,30 +44,29 @@ export const InterviewEditor: React.FC<InterviewEditorProps> = ({
 
   const handleCreateTask = useCallback(() => {
     const newTask: Task = {
-      id: `task-${Date.now()}`,
+      id: `new-task-${Date.now()}`,
+      interview_id: interview.id,
       title: 'New Task',
       prompt: '',
-      aiBehavior: 'neutral',
-      requirements: {
-        audio: true,
-        screenShare: false,
-        webcam: false,
-        fileUpload: false,
-      },
+      ai_behavior: 'neutral',
+      req_audio: true,
+      req_screen_share: false,
+      req_webcam: false,
+      req_file_upload: false,
       supportingFiles: [],
       criteria: [],
-      order: interview.tasks.length
+      task_order: interview.tasks.length,
     };
 
     const updatedTasks = [...interview.tasks, newTask];
     updateInterview({ tasks: updatedTasks });
     setSelectedTaskId(newTask.id);
-  }, [interview.tasks, updateInterview]);
+  }, [interview.id, interview.tasks, updateInterview]);
 
   const handleDeleteTask = useCallback((taskId: string) => {
     const updatedTasks = interview.tasks
       .filter(t => t.id !== taskId)
-      .map((task, index) => ({ ...task, order: index }));
+      .map((task, index) => ({ ...task, task_order: index }));
     
     updateInterview({ tasks: updatedTasks });
     

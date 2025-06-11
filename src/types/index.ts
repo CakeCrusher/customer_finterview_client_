@@ -11,13 +11,6 @@ export interface Criterion {
   scope: CriterionScope;
 }
 
-export interface TaskRequirements {
-  audio: boolean;
-  screenShare: boolean;
-  webcam: boolean;
-  fileUpload: boolean;
-}
-
 export interface SupportingFile {
   name: string;
   url: string;
@@ -25,14 +18,20 @@ export interface SupportingFile {
 
 export interface Task {
   id: string;
+  interview_id: string;
   title: string;
   prompt: string;
-  aiBehavior: AIBehavior;
-  durationMinutes?: number;
-  requirements: TaskRequirements;
+  ai_behavior: AIBehavior;
+  duration_minutes?: number;
+  req_audio: boolean;
+  req_screen_share: boolean;
+  req_webcam: boolean;
+  req_file_upload: boolean;
+  task_order: number;
+
+  // Relational data that's not a direct column
   supportingFiles: SupportingFile[];
   criteria: Criterion[];
-  order: number;
 }
 
 export interface Stats {

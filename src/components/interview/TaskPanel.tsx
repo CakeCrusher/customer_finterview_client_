@@ -42,7 +42,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
     // Update order property
     const reorderedTasks = newTasks.map((task, index) => ({
       ...task,
-      order: index
+      task_order: index
     }));
 
     onReorderTasks(reorderedTasks);
@@ -62,7 +62,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
           <CreateTaskCard onClick={onCreateTask} />
           
           {tasks
-            .sort((a, b) => a.order - b.order)
+            .sort((a, b) => a.task_order - b.task_order)
             .map((task, index) => (
               <div
                 key={task.id}
