@@ -5,7 +5,6 @@ import { Dashboard } from './components/dashboard/Dashboard';
 import { InterviewEditor } from './components/interview/InterviewEditor';
 import { ResultsView } from './components/results/ResultsView';
 import { Interview } from './types';
-import { mockInterviews } from './utils/mockData';
 
 type AppView = 'dashboard' | 'editor' | 'results';
 
@@ -22,15 +21,17 @@ const AppContent: React.FC = () => {
     editingInterview: null,
     viewingResults: null
   });
-  const [interviews, setInterviews] = useState(mockInterviews);
+  const [interviews, setInterviews] = useState<Interview[]>([]);
 
   const handleCreateInterview = () => {
+    if (!user?.email) return;
     const newInterview: Interview = {
       id: `interview-${Date.now()}`,
       title: 'New Interview',
       status: 'draft',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      ownerEmail: user.email,
       generalCriteria: [],
       tasks: []
     };

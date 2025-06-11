@@ -5,7 +5,6 @@ import { Input } from '../ui/Input';
 import { InterviewCard } from './InterviewCard';
 import { CreateInterviewCard } from './CreateInterviewCard';
 import { useAuth } from '../../contexts/AuthContext';
-import { mockInterviews } from '../../utils/mockData';
 import { Interview } from '../../types';
 
 interface DashboardProps {
@@ -16,7 +15,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ onCreateInterview, onEditInterview }) => {
   const { user, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [interviews] = useState(mockInterviews);
+  const [interviews] = useState<Interview[]>([]);
 
   const filteredInterviews = interviews.filter(interview =>
     interview.title.toLowerCase().includes(searchTerm.toLowerCase())

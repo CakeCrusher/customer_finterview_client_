@@ -47,6 +47,7 @@ export interface Interview {
   status: InterviewStatus;
   createdAt: string;
   updatedAt: string;
+  ownerEmail: string;
   generalCriteria: Criterion[];
   tasks: Task[];
   stats?: Stats;

@@ -5,11 +5,9 @@ import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { TaskPanel } from './TaskPanel';
 import { TaskConfigForm } from './TaskConfigForm';
-import { TaskTemplateModal } from './TaskTemplateModal';
 import { GeneralRubricModal } from './GeneralRubricModal';
 import { InviteCandidatesModal } from './InviteCandidatesModal';
 import { Interview, Task, Criterion } from '../../types';
-import { taskTemplates } from '../../utils/mockData';
 
 interface InterviewEditorProps {
   interview: Interview;
@@ -26,7 +24,6 @@ export const InterviewEditor: React.FC<InterviewEditorProps> = ({
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(
     interview.tasks.length > 0 ? interview.tasks[0].id : null
   );
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isRubricModalOpen, setIsRubricModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -45,28 +42,19 @@ export const InterviewEditor: React.FC<InterviewEditorProps> = ({
   }, []);
 
   const handleCreateTask = useCallback(() => {
-    setIsTemplateModalOpen(true);
-  }, []);
-
-  const handleSelectTemplate = useCallback((templateId: string) => {
-    const template = taskTemplates.find(t => t.id === templateId);
-    if (!template) return;
-
     const newTask: Task = {
       id: `task-${Date.now()}`,
-      title: template.name,
-      prompt: template.defaultPrompt,
-      aiBehavior: template.defaultBehavior,
-      durationMinutes: template.defaultDuration,
-      requirements: template.defaultRequirements,
+      title: 'New Task',
+      prompt: '',
+      aiBehavior: 'neutral',
+      requirements: {
+        audio: true,
+        screenShare: false,
+        webcam: false,
+        fileUpload: false,
+      },
       supportingFiles: [],
-      criteria: template.suggestedCriteria.map(c => ({
-        id: `criterion-${Date.now()}-${Math.random()}`,
-        name: c.name,
-        description: c.description,
-        type: c.type,
-        scope: 'task' as const
-      })),
+      criteria: [],
       order: interview.tasks.length
     };
 
@@ -74,6 +62,10 @@ export const InterviewEditor: React.FC<InterviewEditorProps> = ({
     updateInterview({ tasks: updatedTasks });
     setSelectedTaskId(newTask.id);
   }, [interview.tasks, updateInterview]);
+
+  const handleSelectTemplate = useCallback((templateId: string) => {
+    // This function is no longer used as we are not using templates
+  }, []);
 
   const handleDeleteTask = useCallback((taskId: string) => {
     const updatedTasks = interview.tasks
@@ -288,12 +280,6 @@ export const InterviewEditor: React.FC<InterviewEditorProps> = ({
       </div>
 
       {/* Modals */}
-      <TaskTemplateModal
-        isOpen={isTemplateModalOpen}
-        onClose={() => setIsTemplateModalOpen(false)}
-        onSelectTemplate={handleSelectTemplate}
-      />
-
       <GeneralRubricModal
         isOpen={isRubricModalOpen}
         onClose={() => setIsRubricModalOpen(false)}

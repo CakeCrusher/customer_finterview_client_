@@ -4,7 +4,7 @@ import { z } from "zod";
 /* ---------- enums & atoms ---------- */
 
 export const CriterionScope = z
-  .enum(["general", "task"]) // general ↔ task‑specific
+  .enum(["general", "task"])
   .describe(
     "Whether this criterion is applied across the entire interview (`general`) or only within a single task (`task`)."
   );
@@ -17,18 +17,9 @@ export const CriterionType = z
 
 export const CriterionSchema = z
   .object({
-    id: z
-      .string()
-      .uuid()
-      .describe(
-        "Stable UUID used as the primary key for joining scores later. The client must include this when persisting or patching."
-      ),
+    id: z.string().uuid().describe("Stable UUID used as the primary key for joining scores later."),
     name: z.string().min(1).describe("Human‑readable label shown in the UI."),
-    description: z
-      .string()
-      .max(500)
-      .optional()
-      .describe("Optional context for evaluators / LLM. Not shown to candidates."),
+    description: z.string().max(500).optional().describe("Optional context for evaluators / LLM."),
     type: CriterionType,
     scope: CriterionScope,
   })
@@ -42,13 +33,8 @@ export const AIBehavior = z
 
 export const SupportingFileSchema = z
   .object({
-    name: z
-      .string()
-      .describe("Friendly filename shown to candidates (e.g. 'Case.pdf')."),
-    url: z
-      .string()
-      .url()
-      .describe("Signed URL or CDN link from which the client fetches the file."),
+    name: z.string().describe("Friendly filename shown to candidates (e.g. 'Case.pdf')."),
+    url: z.string().url().describe("Signed URL or CDN link from which the client fetches the file."),
   })
   .describe("Static reference materials attached to a task.");
 
@@ -56,51 +42,21 @@ export const SupportingFileSchema = z
 
 export const TaskSchema = z
   .object({
-    id: z
-      .string()
-      .uuid()
-      .describe("Primary key for task ordering and results mapping."),
-    title: z
-      .string()
-      .min(1)
-      .describe("Label shown on the task card (e.g. 'Merger Math')."),
-    prompt: z
-      .string()
-      .min(1)
-      .describe("System prompt / script delivered verbatim to the interviewer agent."),
+    id: z.string().uuid().describe("Primary key for task ordering and results mapping."),
+    title: z.string().min(1).describe("Label shown on the task card (e.g. 'Merger Math')."),
+    prompt: z.string().min(1).describe("System prompt / script delivered verbatim to the interviewer agent."),
 
     aiBehavior: AIBehavior,
 
-    durationMinutes: z
-      .number()
-      .int()
-      .positive()
-      .optional()
-      .default(undefined)
-      .describe("Time limit after which the platform auto‑advances."),
+    durationMinutes: z.number().int().positive().optional().default(undefined).describe("Time limit after which the platform auto‑advances."),
 
-    /* ---- requirements flattened (was TaskRequirementsSchema) ---- */
-    audio: z
-      .boolean()
-      .default(true)
-      .describe("Candidate may speak with (and hear) the AI agent."),
-    screenShare: z
-      .boolean()
-      .default(false)
-      .describe("Candidate must share their screen during this task."),
-    webcam: z
-      .boolean()
-      .default(false)
-      .describe("Candidate's camera must be on."),
-    fileUpload: z
-      .boolean()
-      .default(false)
-      .describe("Candidate must or may upload a file as part of the answer."),
+    /* ---- requirements flattened ---- */
+    audio: z.boolean().default(true).describe("Candidate may speak with (and hear) the AI agent."),
+    screenShare: z.boolean().default(false).describe("Candidate must share their screen during this task."),
+    webcam: z.boolean().default(false).describe("Candidate's camera must be on."),
+    fileUpload: z.boolean().default(false).describe("Candidate must or may upload a file as part of the answer."),
 
-    supportingFiles: z
-      .array(SupportingFileSchema)
-      .default([])
-      .describe("Zero or more reference docs the candidate can open."),
+    supportingFiles: z.array(SupportingFileSchema).default([]).describe("Zero or more reference docs the candidate can open."),
 
     criteria: z
       .array(CriterionSchema)
@@ -110,11 +66,7 @@ export const TaskSchema = z
       })
       .describe("Rubric dimensions specific to this task."),
 
-    taskOrder: z
-      .number()
-      .int()
-      .nonnegative()
-      .describe("Zero‑based position in the interview flow; used for drag‑drop reordering."),
+    taskOrder: z.number().int().nonnegative().describe("Zero‑based position in the interview flow; used for drag‑drop reordering."),
   })
   .describe("Config block for one section/question of the interview.");
 
@@ -138,14 +90,11 @@ export const InterviewSchema = z
     title: z.string().min(1).describe("Card header shown on the company dashboard."),
     status: InterviewStatus.default("draft"),
 
-    createdAt: z
-      .string()
-      .datetime({ offset: true })
-      .describe("ISO timestamp when the interview was first saved."),
-    updatedAt: z
-      .string()
-      .datetime({ offset: true })
-      .describe("ISO timestamp of the most recent change."),
+    createdAt: z.string().datetime({ offset: true }).describe("ISO timestamp when the interview was first saved."),
+    updatedAt: z.string().datetime({ offset: true }).describe("ISO timestamp of the most recent change."),
+
+    /** Email of the user who created this interview (FK to users.email). */
+    ownerEmail: z.string().email().describe("Creator's user email."),
 
     generalCriteria: z
       .array(CriterionSchema)
@@ -153,16 +102,13 @@ export const InterviewSchema = z
       .refine((arr) => arr.every((c) => c.scope === "general"), {
         message: "All general criteria must have scope 'general'",
       })
-      .describe("Rubric dimensions scored across the whole interview (e.g. Communication)."),
+      .describe("Rubric dimensions scored across the whole interview."),
 
-    tasks: z
-      .array(TaskSchema)
-      .min(1, { message: "Interview must contain at least one task" })
-      .describe("Ordered list of tasks that make up the interview."),
+    tasks: z.array(TaskSchema).min(1, { message: "Interview must contain at least one task" }).describe("Ordered list of tasks that make up the interview."),
 
     stats: StatsSchema.optional(),
   })
-  .describe("Top‑level container reconstructing the interview UI and agent prompts.");
+  .describe("Top‑level container that fully reconstructs the interview UI and agent prompts.");
 
 /* ---------- CANDIDATE NOTES ---------- */
 
@@ -180,6 +126,7 @@ export const InterviewPatchSchema = InterviewSchema.partial();
 export const TaskPatchSchema = TaskSchema.partial();
 export const CriterionPatchSchema = CriterionSchema.partial();
 
+
 ```
 
 ```sql
@@ -189,9 +136,16 @@ CREATE TYPE criterion_type    AS ENUM ('rating', 'numeric', 'boolean', 'text');
 CREATE TYPE ai_behavior       AS ENUM ('passive', 'neutral', 'active', 'very_active');
 CREATE TYPE interview_status  AS ENUM ('draft', 'live', 'closed');
 
+/* ---------- USERS ---------- */
+CREATE TABLE users (
+    email TEXT PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 /* ---------- ROOT INTERVIEW DOCUMENT ---------- */
 CREATE TABLE interviews (
     id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    owner_email  text      NOT NULL REFERENCES users(email) ON DELETE CASCADE,
     title        text      NOT NULL,
     status       interview_status NOT NULL DEFAULT 'draft',
     created_at   timestamptz NOT NULL DEFAULT now(),

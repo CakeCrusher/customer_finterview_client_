@@ -4,7 +4,6 @@ import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { Button } from '../ui/Button';
 import { Criterion, CriterionType } from '../../types';
-import { mockCriteria } from '../../utils/mockData';
 
 interface CriterionFormProps {
   criteria: Criterion[];
@@ -17,8 +16,6 @@ export const CriterionForm: React.FC<CriterionFormProps> = ({
   onChange,
   scope
 }) => {
-  const [suggestions] = useState(mockCriteria.filter(c => c.scope === scope));
-
   const criterionTypes = [
     { value: 'rating', label: 'Rating (1-5)' },
     { value: 'numeric', label: 'Numeric' },
@@ -53,16 +50,6 @@ export const CriterionForm: React.FC<CriterionFormProps> = ({
 
   const handleNameChange = (index: number, name: string) => {
     updateCriterion(index, 'name', name);
-    
-    // Auto-populate from suggestions
-    const suggestion = suggestions.find(s => 
-      s.name.toLowerCase() === name.toLowerCase()
-    );
-    
-    if (suggestion) {
-      updateCriterion(index, 'description', suggestion.description || '');
-      updateCriterion(index, 'type', suggestion.type);
-    }
   };
 
   return (
@@ -99,13 +86,7 @@ export const CriterionForm: React.FC<CriterionFormProps> = ({
                       value={criterion.name}
                       onChange={(e) => handleNameChange(index, e.target.value)}
                       placeholder="e.g., Communication Clarity"
-                      list={`suggestions-${scope}-${index}`}
                     />
-                    <datalist id={`suggestions-${scope}-${index}`}>
-                      {suggestions.map((suggestion) => (
-                        <option key={suggestion.id} value={suggestion.name} />
-                      ))}
-                    </datalist>
                   </div>
                   
                   <Select
