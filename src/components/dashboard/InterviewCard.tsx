@@ -55,7 +55,7 @@ export const InterviewCard: React.FC<InterviewCardProps> = ({ interview, onClick
         
         <div className="flex items-center text-sm text-gray-600">
           <Clock size={14} className="mr-2" />
-          {interview.tasks.length} task{interview.tasks.length !== 1 ? 's' : ''}
+          {(interview.tasks?.length ?? 0)} task{(interview.tasks?.length ?? 0) !== 1 ? 's' : ''}
         </div>
       </div>
 

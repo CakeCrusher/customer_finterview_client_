@@ -8,20 +8,21 @@ import { Card } from '../ui/Card';
 interface InviteCandidatesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  interviewId: string;
   interviewTitle: string;
 }
 
 export const InviteCandidatesModal: React.FC<InviteCandidatesModalProps> = ({
   isOpen,
   onClose,
+  interviewId,
   interviewTitle
 }) => {
   const [copied, setCopied] = useState(false);
   const [emails, setEmails] = useState('');
   const [sending, setSending] = useState(false);
 
-  // Mock interview link
-  const interviewLink = `https://ai-finance-interviewer.com/interview/abc123`;
+  const interviewLink = `${window.location.origin}/interview/${interviewId}`;
 
   const handleCopyLink = async () => {
     try {

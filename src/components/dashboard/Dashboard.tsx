@@ -8,14 +8,20 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Interview } from '../../types';
 
 interface DashboardProps {
+  interviews: Interview[];
+  isFetching: boolean;
   onCreateInterview: () => void;
   onEditInterview: (interview: Interview) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onCreateInterview, onEditInterview }) => {
+export const Dashboard: React.FC<DashboardProps> = ({
+  interviews,
+  isFetching,
+  onCreateInterview,
+  onEditInterview
+}) => {
   const { user, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [interviews] = useState<Interview[]>([]);
 
   const filteredInterviews = interviews.filter(interview =>
     interview.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -39,7 +45,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateInterview, onEditI
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <User size={16} />
-              <span>{user?.name} • {user?.company}</span>
+              <span>{user?.email}</span>
             </div>
             <Button variant="ghost" icon={LogOut} onClick={logout}>
               Sign out
@@ -66,25 +72,42 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateInterview, onEditI
           </div>
         </div>
 
-        {/* Interview Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <CreateInterviewCard onClick={onCreateInterview} />
-          {filteredInterviews.map((interview) => (
-            <InterviewCard
-              key={interview.id}
-              interview={interview}
-              onClick={() => onEditInterview(interview)}
-            />
-          ))}
-        </div>
-
-        {filteredInterviews.length === 0 && searchTerm && (
+        {isFetching ? (
           <div className="text-center py-12">
-            <div className="text-gray-500 mb-2">No interviews found</div>
-            <div className="text-sm text-gray-400">
-              Try adjusting your search terms
-            </div>
+            <div className="text-gray-500">Loading interviews...</div>
           </div>
+        ) : (
+          <>
+            {/* Interview Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <CreateInterviewCard onClick={onCreateInterview} />
+              {filteredInterviews.map((interview) => (
+                <InterviewCard
+                  key={interview.id}
+                  interview={interview}
+                  onClick={() => onEditInterview(interview)}
+                />
+              ))}
+            </div>
+
+            {filteredInterviews.length === 0 && !searchTerm && (
+              <div className="text-center py-12 col-span-full">
+                <h3 className="text-lg font-medium text-gray-900">No interviews yet</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Click "Create Interview" to get started.
+                </p>
+              </div>
+            )}
+
+            {filteredInterviews.length === 0 && searchTerm && (
+              <div className="text-center py-12">
+                <div className="text-gray-500 mb-2">No interviews found</div>
+                <div className="text-sm text-gray-400">
+                  Try adjusting your search terms
+                </div>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

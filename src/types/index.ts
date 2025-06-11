@@ -45,9 +45,9 @@ export interface Interview {
   id: string;
   title: string;
   status: InterviewStatus;
-  createdAt: string;
-  updatedAt: string;
-  ownerEmail: string;
+  created_at: string;
+  updated_at: string;
+  owner_email: string;
   generalCriteria: Criterion[];
   tasks: Task[];
   stats?: Stats;

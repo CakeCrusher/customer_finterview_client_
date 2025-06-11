@@ -3,6 +3,7 @@ import { Save, Users, Settings, ArrowLeft, Eye } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
+import { Input } from '../ui/Input';
 import { TaskPanel } from './TaskPanel';
 import { TaskConfigForm } from './TaskConfigForm';
 import { GeneralRubricModal } from './GeneralRubricModal';
@@ -63,10 +64,6 @@ export const InterviewEditor: React.FC<InterviewEditorProps> = ({
     setSelectedTaskId(newTask.id);
   }, [interview.tasks, updateInterview]);
 
-  const handleSelectTemplate = useCallback((templateId: string) => {
-    // This function is no longer used as we are not using templates
-  }, []);
-
   const handleDeleteTask = useCallback((taskId: string) => {
     const updatedTasks = interview.tasks
       .filter(t => t.id !== taskId)
@@ -97,7 +94,7 @@ export const InterviewEditor: React.FC<InterviewEditorProps> = ({
   const handleSave = useCallback(() => {
     const updatedInterview = {
       ...interview,
-      updatedAt: new Date().toISOString()
+      updated_at: new Date().toISOString()
     };
     onSave(updatedInterview);
     setHasUnsavedChanges(false);
@@ -107,7 +104,7 @@ export const InterviewEditor: React.FC<InterviewEditorProps> = ({
     const publishedInterview = {
       ...interview,
       status: 'live' as const,
-      updatedAt: new Date().toISOString()
+      updated_at: new Date().toISOString()
     };
     onSave(publishedInterview);
     setHasUnsavedChanges(false);
@@ -144,9 +141,11 @@ export const InterviewEditor: React.FC<InterviewEditorProps> = ({
               <div className="h-6 w-px bg-gray-300" />
               <div>
                 <div className="flex items-center space-x-3">
-                  <h1 className="text-xl font-semibold text-gray-900">
-                    {interview.title}
-                  </h1>
+                  <Input
+                    value={interview.title}
+                    onChange={(e) => updateInterview({ title: e.target.value })}
+                    className="text-xl font-semibold text-gray-900 border-none focus:ring-0"
+                  />
                   <Badge variant={getStatusVariant(interview.status)} className="capitalize">
                     {interview.status}
                   </Badge>
@@ -252,33 +251,13 @@ export const InterviewEditor: React.FC<InterviewEditorProps> = ({
               />
             </div>
           ) : (
-            <div className="p-6">
-              <div className="flex items-center justify-center h-full min-h-[400px]">
-                <Card className="p-8 max-w-md text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <Settings className="w-8 h-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Configure Your Interview
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    {interview.tasks.length === 0 
-                      ? "Start by adding your first interview task. Each task represents a section or question in your interview."
-                      : "Select a task from the left panel to configure its settings and evaluation criteria."
-                    }
-                  </p>
-                  {interview.tasks.length === 0 && (
-                    <Button onClick={handleCreateTask} icon={Users}>
-                      Create First Task
-                    </Button>
-                  )}
-                </Card>
-              </div>
+            <div className="p-6 text-center text-gray-500">
+              <p>Select a task to configure it, or create a new one.</p>
             </div>
           )}
         </div>
       </div>
-
+      
       {/* Modals */}
       <GeneralRubricModal
         isOpen={isRubricModalOpen}
@@ -286,10 +265,11 @@ export const InterviewEditor: React.FC<InterviewEditorProps> = ({
         criteria={interview.generalCriteria}
         onChange={handleGeneralCriteriaChange}
       />
-
+      
       <InviteCandidatesModal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
+        interviewId={interview.id}
         interviewTitle={interview.title}
       />
     </div>

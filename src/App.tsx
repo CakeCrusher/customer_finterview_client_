@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginForm } from './components/auth/LoginForm';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { InterviewEditor } from './components/interview/InterviewEditor';
 import { ResultsView } from './components/results/ResultsView';
 import { Interview } from './types';
+import { supabase } from './lib/supabase';
 
 type AppView = 'dashboard' | 'editor' | 'results';
 
@@ -22,24 +23,60 @@ const AppContent: React.FC = () => {
     viewingResults: null
   });
   const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [isFetching, setIsFetching] = useState(true);
 
-  const handleCreateInterview = () => {
-    if (!user?.email) return;
-    const newInterview: Interview = {
-      id: `interview-${Date.now()}`,
-      title: 'New Interview',
-      status: 'draft',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ownerEmail: user.email,
-      generalCriteria: [],
-      tasks: []
+  useEffect(() => {
+    const fetchInterviews = async () => {
+      if (!user) return;
+      setIsFetching(true);
+      const { data, error } = await supabase
+        .from('interviews')
+        .select('*')
+        .eq('owner_email', user.email);
+
+      if (error) {
+        console.error('Error fetching interviews:', error);
+      } else {
+        const completeInterviews = data.map(i => ({...i, tasks: i.tasks ?? [], generalCriteria: i.generalCriteria ?? []}))
+        setInterviews(completeInterviews as Interview[]);
+      }
+      setIsFetching(false);
     };
 
-    setInterviews([...interviews, newInterview]);
+    fetchInterviews();
+  }, [user]);
+
+  const handleCreateInterview = async () => {
+    if (!user?.email) return;
+
+    const newInterviewPartial = {
+      title: 'New Untitled Interview',
+      owner_email: user.email,
+    };
+
+    const { data, error } = await supabase
+      .from('interviews')
+      .insert(newInterviewPartial)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating interview:', error);
+      return;
+    }
+
+    setInterviews([...interviews, {
+      ...data,
+      tasks: [],
+      generalCriteria: [],
+    }]);
     setAppState({
       view: 'editor',
-      editingInterview: newInterview,
+      editingInterview: {
+        ...data,
+        tasks: [],
+        generalCriteria: [],
+      },
       viewingResults: null
     });
   };
@@ -62,16 +99,35 @@ const AppContent: React.FC = () => {
     }
   };
 
-  const handleSaveInterview = (updatedInterview: Interview) => {
+  const handleSaveInterview = async (updatedInterview: Interview) => {
+    const { tasks, generalCriteria, stats, ...interviewData } = updatedInterview;
+
+    const { data, error } = await supabase
+      .from('interviews')
+      .update({
+        ...interviewData,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', updatedInterview.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating interview:', error);
+      return;
+    }
+
+    const newInterview = { ...data, tasks, generalCriteria, stats };
+
     setInterviews(prev => 
       prev.map(interview => 
-        interview.id === updatedInterview.id ? updatedInterview : interview
+        interview.id === newInterview.id ? newInterview : interview
       )
     );
     
     setAppState(prev => ({
       ...prev,
-      editingInterview: updatedInterview
+      editingInterview: newInterview,
     }));
   };
 
@@ -116,6 +172,8 @@ const AppContent: React.FC = () => {
 
   return (
     <Dashboard
+      interviews={interviews}
+      isFetching={isFetching}
       onCreateInterview={handleCreateInterview}
       onEditInterview={handleEditInterview}
     />
