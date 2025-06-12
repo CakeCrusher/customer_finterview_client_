@@ -16,11 +16,18 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-blue-400 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Gradient overlay for enhanced effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-blue-500/30" />
+      
+      {/* Decorative elements */}
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-blue-600/20 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-20 w-64 h-64 bg-gradient-to-tl from-blue-500/15 to-transparent rounded-full blur-2xl" />
+      
+      <div className="max-w-md w-full relative z-10">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 p-8">
           <div className="text-center mb-8">
-            <div className="mx-auto h-12 w-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
+            <div className="mx-auto h-12 w-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mb-4 shadow-lg">
               <div className="text-white font-bold text-xl">AI</div>
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Finance Interviewer</h2>
@@ -34,7 +41,7 @@ export const LoginForm: React.FC = () => {
             type="button"
             onClick={handleGoogleSignIn}
             variant="outline"
-            className="w-full mb-6 flex items-center justify-center gap-3"
+            className="w-full mb-6 flex items-center justify-center gap-3 bg-white/80 backdrop-blur-sm border-gray-200 hover:bg-white hover:shadow-md transition-all duration-200"
             loading={isLoading}
             size="lg"
           >
@@ -60,7 +67,7 @@ export const LoginForm: React.FC = () => {
           </Button>
 
           {error && (
-            <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg mt-4">
+            <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg mt-4 border border-red-200">
               {error}
             </div>
           )}
